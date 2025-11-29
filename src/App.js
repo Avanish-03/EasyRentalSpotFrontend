@@ -1,25 +1,58 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { Routes, Route } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Footer from './components/Footer';
+import LandingPage from './pages/LandingPage';
+import Listings from "./pages/Listings";
+import About from './pages/About';
+import Contact from './pages/Contact';
+import Login from './pages/Auth/Login';
+import Register from './pages/Auth/Register';
+import NotFound from './pages/NotFound';
 
-function App() {
+import ProtectedRoute from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/Dashboard/Admin/AdminDashboard";
+import OwnerDashboard from "./pages/Dashboard/Owner/OwnerDashboard";
+import TenantDashboard from "./pages/Dashboard/Tenant/TenantDashboard";
+
+import { useLocation } from "react-router-dom";
+
+export default function App() {
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const location = useLocation();
+  const hideNavbarFooter = location.pathname.startsWith("/dashboard");
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="min-h-screen flex flex-col bg-gray-50 text-gray-800">
+       {!hideNavbarFooter && <Navbar onSearch={setSearchQuery} />}
+      <main className="flex-grow">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/listings" element={<Listings searchQuery={searchQuery} />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/dashboard/admin" element={
+            <ProtectedRoute>
+              <AdminDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/owner" element={
+            <ProtectedRoute>
+              <OwnerDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/tenant" element={
+            <ProtectedRoute>
+              <TenantDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+      {!hideNavbarFooter && <Footer />}
     </div>
   );
 }
-
-export default App;
