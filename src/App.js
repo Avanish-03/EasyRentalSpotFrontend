@@ -8,6 +8,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import ForgotPassword from './pages/Auth/forgot-password';
 import NotFound from './pages/NotFound';
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -33,6 +34,7 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<Register />} />
           <Route path="/dashboard/admin" element={
             <ProtectedRoute>
