@@ -1,3 +1,4 @@
+//reportApi.js
 import api from './api';
 
 export const getBookingReport = (params = {}) => api.get('/reports/bookings', { params });

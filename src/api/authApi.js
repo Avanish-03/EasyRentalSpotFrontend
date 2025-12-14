@@ -1,13 +1,13 @@
 import api from "./axios";
 
-// Register user
+// Register
 export const registerUser = (data) => api.post("/auth/register", data);
 
-// Login user
+// Login (tenant / owner)
 export const loginUser = (data) => api.post("/auth/login", data);
 
-// Get current logged in user
-export const getProfile = () =>
-  api.get("/auth/me", {
-    headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-  });
+// Admin login
+export const adminLogin = (data) => api.post("/admin/auth/login", data);
+
+// Get current user
+export const getProfile = () => api.get("/auth/me");

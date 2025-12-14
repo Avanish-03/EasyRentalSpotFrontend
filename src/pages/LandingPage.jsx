@@ -1,18 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 
-/**
- * LandingPage.jsx
- * Single-file premium landing page using Tailwind CSS (no Bootstrap).
- *
- * Notes:
- * - Replace placeholder images (unsplash) with your assets.
- * - Hook search form to your API or client-side filter as needed.
- * - Testimonials slider is a small JS-driven carousel (no external deps).
- */
-
 export default function LandingPage() {
-  // --- demo data (replace with real data) ---
   const listings = [
     {
       id: 1,
@@ -123,7 +112,7 @@ export default function LandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="pt-36 pb-20 text-center">
-            <h1 className="text-white text-3xl text-transparent from-blue-500 leading-tight to-teal-300 sm:text-4xl md:text-9xl font-extrabold leading-tight">
+            <h1 className="text-white text-3xl text-transparent from-blue-500 to-teal-300 sm:text-4xl md:text-9xl font-extrabold leading-tight">
               Find Your Dream Home in Your City
             </h1>
             <p className="mt-4 text-indigo-100 max-w-2xl mx-auto text-sm sm:text-base">

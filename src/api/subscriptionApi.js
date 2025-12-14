@@ -1,3 +1,4 @@
+//subscriptionApi.js
 import api from "./axios";
 
 export const getAllPlans = (params = {}) => api.get("/subscriptions/plans", { params });

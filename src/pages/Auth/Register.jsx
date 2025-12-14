@@ -103,7 +103,7 @@ export default function Register() {
           <div className="mt-4">
             <p className="text-white mb-2 font-medium drop-shadow">Select Role:</p>
             <div className="flex gap-4 flex-wrap">
-              {roles.map((role) => (
+              {roles.slice(0,2).map((role) => (
                 <label
                   key={role._id}
                   className="flex items-center gap-2 text-white drop-shadow cursor-pointer"

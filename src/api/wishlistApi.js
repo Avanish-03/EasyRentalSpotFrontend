@@ -1,3 +1,4 @@
+//wishlistApi.js
 import api from './api';
 
 export const addToWishlist = (data) => api.post('/wishlist', data);
