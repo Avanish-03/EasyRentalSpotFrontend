@@ -5,10 +5,12 @@ import {
   cancelMyBooking,
   getTenantProperties,
 } from "../../../api/tenantApi";
+import BookingModal from "./BookingModal";
+
 
 export default function MyBookings() {
   const navigate = useNavigate();
-
+  const [selectedProperty, setSelectedProperty] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -126,11 +128,12 @@ export default function MyBookings() {
                   </div>
 
                   <button
-                    onClick={() => navigate(`/property/${p._id}`)}
+                    onClick={() => setSelectedProperty(p)}
                     className="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
                   >
                     Book Now
                   </button>
+
                 </div>
               ))}
             </div>
@@ -163,10 +166,9 @@ export default function MyBookings() {
 
               <span
                 className={`inline-block mt-3 rounded-full px-3 py-1 text-xs font-medium
-                  ${
-                    b.status === "confirmed"
-                      ? "bg-green-100 text-green-700"
-                      : b.status === "pending"
+                  ${b.status === "confirmed"
+                    ? "bg-green-100 text-green-700"
+                    : b.status === "pending"
                       ? "bg-yellow-100 text-yellow-700"
                       : "bg-red-100 text-red-700"
                   }
@@ -188,6 +190,14 @@ export default function MyBookings() {
           ))}
         </div>
       )}
+      {selectedProperty && (
+        <BookingModal
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+          onSuccess={loadBookings}
+        />
+      )}
+
     </div>
   );
 }

@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   getTenantDashboard,
   getTenantProperties,
 } from "../../../api/tenantApi";
+import BookingModal from "./BookingModal";
 
 export default function TenantDashboard() {
-  const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState([]);
+  const [selectedProperty, setSelectedProperty] = useState(null);
 
   const [stats, setStats] = useState({
     bookings: { total: 0, active: 0, pending: 0 },
@@ -25,7 +24,7 @@ export default function TenantDashboard() {
     loadApprovedProperties();
   }, []);
 
-  /* ---------------- LOAD DASHBOARD STATS ---------------- */
+  /* ---------------- DASHBOARD STATS ---------------- */
   const loadDashboard = async () => {
     try {
       const res = await getTenantDashboard();
@@ -35,9 +34,10 @@ export default function TenantDashboard() {
     }
   };
 
-  /* ---------------- LOAD APPROVED PROPERTIES ---------------- */
+  /* ---------------- APPROVED PROPERTIES ---------------- */
   const loadApprovedProperties = async () => {
     try {
+      setLoading(true);
       const res = await getTenantProperties({
         approvalStatus: "approved",
         status: "available",
@@ -67,6 +67,7 @@ export default function TenantDashboard() {
 
   return (
     <div className="p-6 space-y-8">
+
       {/* HEADER */}
       <h1 className="text-2xl font-bold text-gray-800">
         Tenant Dashboard
@@ -81,7 +82,7 @@ export default function TenantDashboard() {
         <StatCard title="Upcoming Visits" value={stats.visits.upcomingCount} color="from-yellow-500 to-yellow-700" />
       </div>
 
-      {/* ================= APPROVED PROPERTIES ================= */}
+      {/* APPROVED PROPERTIES */}
       <div>
         <h2 className="mb-4 text-2xl font-bold text-gray-800">
           Available Properties
@@ -117,10 +118,10 @@ export default function TenantDashboard() {
                 </div>
 
                 <button
-                  onClick={() => navigate(`/property/${p._id}`)}
+                  onClick={() => setSelectedProperty(p)}
                   className="mt-4 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
                 >
-                  View & Book
+                  Book Now
                 </button>
               </div>
             ))}
@@ -135,20 +136,25 @@ export default function TenantDashboard() {
         </h2>
 
         {stats.subscription.active ? (
-          <p className="text-green-600 font-medium">
-            ✅ Active Subscription
-          </p>
+          <p className="text-green-600 font-medium">✅ Active Subscription</p>
         ) : (
-          <p className="text-red-600 font-medium">
-            ❌ No Active Subscription
-          </p>
+          <p className="text-red-600 font-medium">❌ No Active Subscription</p>
         )}
       </div>
+
+      {/* BOOKING MODAL */}
+      {selectedProperty && (
+        <BookingModal
+          property={selectedProperty}
+          onClose={() => setSelectedProperty(null)}
+          onSuccess={loadApprovedProperties}
+        />
+      )}
     </div>
   );
 }
 
-/* ---------------- UI COMPONENT ---------------- */
+/* ---------------- UI ---------------- */
 function StatCard({ title, value, color }) {
   return (
     <div className={`rounded-xl bg-gradient-to-r ${color} p-5 text-white shadow`}>

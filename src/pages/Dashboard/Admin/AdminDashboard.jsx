@@ -104,11 +104,10 @@ export default function AdminDashboard() {
       </h1>
 
       {/* ===== SUMMARY CARDS ===== */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Users" value={summary.users} />
         <StatCard title="Properties" value={summary.properties} />
         <StatCard title="Bookings" value={summary.bookings} />
-        <StatCard title="Pending" value={summary.pendingApprovals} />
         <StatCard title="Revenue" value={`₹${summary.revenue}`} />
       </div>
 

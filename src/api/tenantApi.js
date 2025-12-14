@@ -111,7 +111,7 @@ export const confirmPaymentClient = (data) =>
   api.post("/tenant/payments/confirm", data);
 
 export const getMyPayments = () =>
-  api.get("/tenant/payments");
+  api.get("/tenant/payments"); 
 
 export const requestPaymentRefund = (id) =>
   api.post(`/tenant/payments/${id}/refund`);

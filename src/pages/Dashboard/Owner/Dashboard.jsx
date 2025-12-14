@@ -1,14 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Sidebar from "../../../components/Sidebar";
 
-import {
-  getOwnerDashboardStats,
-  getOwnerBookings,
-  getOwnerVisits,
-  getOwnerReviewSummary,
-  getOwnerPayments,
-} from "../../../api/ownerApi";
-
 import OwnerMyProp from "./OwnerMyProp";
 import Bookings from "./Bookings";
 import Payments from "./Payments";
@@ -18,18 +10,15 @@ import Profile from "./Profile";
 import DashboardHome from "./DashboardHome";
 
 const Dashboard = () => {
-
-  // ✅ ACTIVE TAB — Persisted
+  // ✅ ACTIVE TAB (Persisted)
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem("ownerActiveTab") || "home";
   });
 
-  // Dashboard Data
-  const [stats, setStats] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [visits, setVisits] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [payments, setPayments] = useState([]);
+  // ✅ Persist tab on change
+  useEffect(() => {
+    localStorage.setItem("ownerActiveTab", activeTab);
+  }, [activeTab]);
 
   // 🔐 LOGOUT
   const handleLogout = () => {
@@ -39,40 +28,9 @@ const Dashboard = () => {
     window.location.href = "/login";
   };
 
-  // ✅ Persist active tab
-  useEffect(() => {
-    localStorage.setItem("ownerActiveTab", activeTab);
-  }, [activeTab]);
-
-  // Load dashboard stats once
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const [s, b, v, r, p] = await Promise.all([
-        getOwnerDashboardStats(),
-        getOwnerBookings(),
-        getOwnerVisits(),
-        getOwnerReviewSummary(),
-        getOwnerPayments(),
-      ]);
-
-      setStats(s.data);
-      setBookings(b.data);
-      setVisits(v.data);
-      setSummary(r.data);
-      setPayments(p.data);
-    } catch (err) {
-      console.log("Dashboard loading error:", err);
-    }
-  };
-
   return (
     <div className="flex min-h-screen bg-gray-100">
-
-      {/* 🔹 SIDEBAR */}
+      {/* ================= SIDEBAR ================= */}
       <Sidebar
         role="Owner"
         activeTab={activeTab}
@@ -80,34 +38,21 @@ const Dashboard = () => {
         onLogout={handleLogout}
       />
 
-      {/* 🔹 MAIN CONTENT */}
-      <div className="flex-1 p-6 ml-64">
+      {/* ================= MAIN CONTENT ================= */}
+      <div className="flex-1 ml-64 p-6">
+        {activeTab === "home" && <DashboardHome />}
 
-        {activeTab === "home" && <DashboardHome stats={stats} />}
+        {activeTab === "properties" && <OwnerMyProp />}
 
-        {/* 🔥 PASS activeTab HERE (IMPORTANT FIX) */}
-        {activeTab === "properties" && (
-          <OwnerMyProp activeTab={activeTab} />
-        )}
+        {activeTab === "bookings" && <Bookings />}
 
-        {activeTab === "bookings" && (
-          <Bookings bookings={bookings} />
-        )}
+        {activeTab === "payments" && <Payments />}
 
-        {activeTab === "payments" && (
-          <Payments payments={payments} />
-        )}
+        {activeTab === "visits" && <Visits />}
 
-        {activeTab === "visits" && (
-          <Visits visits={visits} />
-        )}
-
-        {activeTab === "reviews" && (
-          <Reviews summary={summary} />
-        )}
+        {activeTab === "reviews" && <Reviews />}
 
         {activeTab === "profile" && <Profile />}
-
       </div>
     </div>
   );

@@ -4,228 +4,152 @@ import {
   getOwnerBookings,
   getOwnerVisits,
   getOwnerReviewSummary,
-  getOwnerPayments,
 } from "../../../api/ownerApi";
 
 export default function DashboardHome() {
-  const [stats, setStats] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [visits, setVisits] = useState([]);
-  const [summary, setSummary] = useState(null);
-  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    totalBookings: 0,
+    totalRevenue: 0,
+  });
+
+  const [bookings, setBookings] = useState([]);
+  const [visits, setVisits] = useState([]);
+  const [reviews, setReviews] = useState({
+    avgRating: 0,
+    totalReviews: 0,
+  });
+
   useEffect(() => {
-    loadData();
+    loadDashboard();
   }, []);
 
-  const loadData = async () => {
+  const loadDashboard = async () => {
+    setLoading(true);
+
+    /* ---------- STATS ---------- */
     try {
-      const [
-        statsRes,
-        bookingsRes,
-        visitsRes,
-        reviewsRes,
-        paymentsRes,
-      ] = await Promise.allSettled([
-        getOwnerDashboardStats(),
-        getOwnerBookings(),
-        getOwnerVisits(),
-        getOwnerReviewSummary(),
-        getOwnerPayments(),
-      ]);
-
-      // ✅ STATS
-      if (statsRes.status === "fulfilled") {
-        setStats(statsRes.value.data);
-      } else {
-        setStats({
-          totalProperties: 0,
-          totalBookings: 0,
-          totalRevenue: 0,
-        });
-      }
-
-      // ✅ BOOKINGS
-      if (bookingsRes.status === "fulfilled") {
-        setBookings(
-          Array.isArray(bookingsRes.value.data?.bookings)
-            ? bookingsRes.value.data.bookings
-            : []
-        );
-      }
-
-      // ✅ VISITS
-      if (visitsRes.status === "fulfilled") {
-        setVisits(
-          Array.isArray(visitsRes.value.data?.visits)
-            ? visitsRes.value.data.visits
-            : []
-        );
-      }
-
-      // ✅ REVIEWS
-      if (reviewsRes.status === "fulfilled") {
-        setSummary(reviewsRes.value.data || null);
-      }
-
-      // ✅ PAYMENTS
-      if (paymentsRes.status === "fulfilled") {
-        setPayments(
-          Array.isArray(paymentsRes.value.data?.payments)
-            ? paymentsRes.value.data.payments
-            : []
-        );
-      }
+      const res = await getOwnerDashboardStats();
+      const s = res.data?.stats || res.data || {};
+      setStats({
+        totalProperties: s.totalProperties || 0,
+        totalBookings: s.totalBookings || 0,
+        totalRevenue: s.totalRevenue || 0,
+      });
     } catch (err) {
-      console.error("Dashboard load error:", err);
-    } finally {
-      setLoading(false);
+      console.error("Stats error:", err);
     }
+
+    /* ---------- BOOKINGS ---------- */
+    try {
+      const res = await getOwnerBookings();
+      setBookings(Array.isArray(res.data?.bookings) ? res.data.bookings : []);
+    } catch (err) {
+      console.error("Bookings error:", err);
+    }
+
+    /* ---------- VISITS ---------- */
+    try {
+      const res = await getOwnerVisits();
+      setVisits(Array.isArray(res.data?.visits) ? res.data.visits : []);
+    } catch (err) {
+      console.error("Visits error:", err);
+    }
+
+    /* ---------- REVIEWS ---------- */
+    try {
+      const res = await getOwnerReviewSummary();
+      setReviews({
+        avgRating: res.data?.avgRating || 0,
+        totalReviews: res.data?.totalReviews || 0,
+      });
+    } catch (err) {
+      console.error("Reviews error:", err);
+    }
+
+    // 🔥 GUARANTEED loader off
+    setLoading(false);
   };
 
-  /* ---------------- LOADING ---------------- */
+  /* ---------- LOADER ---------- */
   if (loading) {
     return (
       <div className="flex h-60 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-600 border-t-transparent"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
       </div>
     );
   }
 
   return (
     <div className="p-6 space-y-8">
-      {/* HEADER */}
       <h1 className="text-2xl font-bold text-gray-800">
         Welcome, Owner 👋
       </h1>
 
       {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          title="Total Properties"
-          value={stats?.totalProperties || 0}
-          color="from-purple-500 to-purple-700"
-        />
-        <StatCard
-          title="Total Bookings"
-          value={stats?.totalBookings || 0}
-          color="from-blue-500 to-blue-700"
-        />
-        <StatCard
-          title="Total Revenue"
-          value={`₹${stats?.totalRevenue || 0}`}
-          color="from-green-500 to-green-700"
-        />
+        <StatCard title="Total Properties" value={stats.totalProperties} />
+        <StatCard title="Total Bookings" value={stats.totalBookings} />
+        <StatCard title="Total Revenue" value={`₹${stats.totalRevenue}`} />
       </div>
 
-      {/* LATEST BOOKINGS */}
       <Section title="Latest Bookings">
-        <Card>
-          {bookings.length === 0 ? (
-            <Empty text="No bookings yet." />
-          ) : (
-            <ul className="divide-y">
-              {bookings.slice(0, 5).map((b) => (
-                <li key={b._id} className="py-2 flex justify-between">
-                  <span>{b.propertyId?.title || "Property"}</span>
-                  <span className="font-medium">{b.status}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        {bookings.length === 0
+          ? <Empty text="No bookings yet" />
+          : bookings.slice(0, 5).map(b => (
+              <Row
+                key={b._id}
+                left={b.propertyId?.title || "Property"}
+                right={b.status}
+              />
+            ))}
       </Section>
 
-      {/* VISITS */}
-      <Section title="Recent Property Visits">
-        <Card>
-          {visits.length === 0 ? (
-            <Empty text="No visit requests." />
-          ) : (
-            <ul className="divide-y">
-              {visits.slice(0, 5).map((v) => (
-                <li key={v._id} className="py-2 flex justify-between">
-                  <span>{v.propertyId?.title || "Property"}</span>
-                  <span>{v.date}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <Section title="Recent Visits">
+        {visits.length === 0
+          ? <Empty text="No visits yet" />
+          : visits.slice(0, 5).map(v => (
+              <Row
+                key={v._id}
+                left={v.propertyId?.title || "Property"}
+                right={v.visitDate?.slice(0,10)}
+              />
+            ))}
       </Section>
 
-      {/* REVIEWS */}
       <Section title="Reviews Summary">
-        <Card>
-          {summary ? (
-            <>
-              <p className="text-lg font-bold">
-                ⭐ {summary.avgRating}/5
-              </p>
-              <p>Total Reviews: {summary.totalReviews}</p>
-            </>
-          ) : (
-            <Empty text="No reviews yet." />
-          )}
-        </Card>
-      </Section>
-
-      {/* PAYMENTS */}
-      <Section title="Recent Payments">
-        <Card>
-          {payments.length === 0 ? (
-            <Empty text="No payments found." />
-          ) : (
-            <ul className="divide-y">
-              {payments.slice(0, 5).map((p) => (
-                <li key={p._id} className="py-2 flex justify-between">
-                  <span>{p.bookingId?.propertyId?.title}</span>
-                  <span className="font-medium text-green-600">
-                    ₹{p.amount}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+        <p>⭐ {reviews.avgRating}/5</p>
+        <p>Total Reviews: {reviews.totalReviews}</p>
       </Section>
     </div>
   );
 }
 
-/* ---------- UI HELPERS ---------- */
+/* ---------- UI ---------- */
 
-function Section({ title, children }) {
-  return (
-    <div>
-      <h2 className="mb-2 text-xl font-semibold text-gray-700">
-        {title}
-      </h2>
-      {children}
-    </div>
-  );
-}
+const Section = ({ title, children }) => (
+  <div className="bg-white p-4 rounded shadow">
+    <h2 className="text-lg font-semibold mb-2">{title}</h2>
+    {children}
+  </div>
+);
 
-function Card({ children }) {
-  return (
-    <div className="bg-white p-4 rounded-lg shadow">
-      {children}
-    </div>
-  );
-}
+const StatCard = ({ title, value }) => (
+  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-5 rounded">
+    <p className="text-sm">{title}</p>
+    <p className="text-2xl font-bold">{value}</p>
+  </div>
+);
 
-function Empty({ text }) {
-  return <p className="text-gray-500">{text}</p>;
-}
+const Row = ({ left, right }) => (
+  <div className="flex justify-between border-b py-2 text-sm">
+    <span>{left}</span>
+    <span className="capitalize">{right}</span>
+  </div>
+);
 
-function StatCard({ title, value, color }) {
-  return (
-    <div
-      className={`rounded-lg p-5 text-white shadow bg-gradient-to-r ${color}`}
-    >
-      <p className="text-sm opacity-80">{title}</p>
-      <p className="text-2xl font-bold">{value}</p>
-    </div>
-  );
-}
+const Empty = ({ text }) => (
+  <p className="text-gray-500 text-sm">{text}</p>
+);

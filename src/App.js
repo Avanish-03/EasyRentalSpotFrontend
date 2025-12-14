@@ -82,6 +82,7 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          
 
           {/* NOT FOUND */}
           <Route path="*" element={<NotFound />} />

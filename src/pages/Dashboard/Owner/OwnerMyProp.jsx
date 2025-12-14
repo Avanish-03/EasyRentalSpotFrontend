@@ -39,14 +39,7 @@ export default function OwnerMyProp({ activeTab }) {
     }
   }, [activeTab]);
 
-  /* ---------------- LOADING ---------------- */
-  if (loading) {
-    return (
-      <div className="flex h-60 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-purple-600 border-t-transparent"></div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="p-6">
@@ -79,10 +72,9 @@ export default function OwnerMyProp({ activeTab }) {
 
                 <span
                   className={`rounded-full px-2 py-1 text-xs
-                    ${
-                      p.approvalStatus === "approved"
-                        ? "bg-green-100 text-green-700"
-                        : p.approvalStatus === "pending"
+                    ${p.approvalStatus === "approved"
+                      ? "bg-green-100 text-green-700"
+                      : p.approvalStatus === "pending"
                         ? "bg-yellow-100 text-yellow-700"
                         : "bg-red-100 text-red-700"
                     }
