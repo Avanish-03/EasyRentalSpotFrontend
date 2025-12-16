@@ -9,13 +9,20 @@ import {
 } from "../../../api/adminApi";
 
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  BarChart, Bar,
-  PieChart, Pie, Cell,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 
-/* ---------- SAFETY UTILS ---------- */
-const safeArray = (v) => Array.isArray(v) ? v : [];
+/* ---------------- CONSTANTS ---------------- */
 const COLORS = ["#6366f1", "#10b981", "#f59e0b", "#ef4444"];
 
 export default function AdminDashboard() {
@@ -23,9 +30,12 @@ export default function AdminDashboard() {
 
   const [summary, setSummary] = useState({
     users: 0,
+    owners: 0,
+    tenants: 0,
     properties: 0,
+    pendingProperties: 0,
     bookings: 0,
-    pendingApprovals: 0,
+    pendingBookings: 0,
     revenue: 0,
   });
 
@@ -33,7 +43,7 @@ export default function AdminDashboard() {
   const [revenueTrend, setRevenueTrend] = useState([]);
   const [propertyStatus, setPropertyStatus] = useState([]);
   const [topOwners, setTopOwners] = useState([]);
-  const [reports, setReports] = useState([]);
+  const [reports, setReports] = useState({ pending: 0, resolved: 0 });
 
   useEffect(() => {
     loadDashboard();
@@ -41,14 +51,7 @@ export default function AdminDashboard() {
 
   const loadDashboard = async () => {
     try {
-      const [
-        s,
-        bt,
-        rt,
-        ps,
-        to,
-        rs,
-      ] = await Promise.all([
+      const [s, bt, rt, ps, to, rs] = await Promise.all([
         getAdminDashboardSummary(),
         getAdminBookingsTrend(),
         getAdminRevenueTrend(),
@@ -57,29 +60,33 @@ export default function AdminDashboard() {
         getAdminReportsStats(),
       ]);
 
-      /* ---------- NORMALIZATION ---------- */
+      /* -------- SUMMARY -------- */
       setSummary(s?.data?.summary || summary);
 
-      setBookingsTrend(
-        safeArray(bt?.data?.data || bt?.data)
-      );
+      /* -------- BOOKINGS TREND -------- */
+      setBookingsTrend(bt?.data?.trend || []);
 
-      setRevenueTrend(
-        safeArray(rt?.data?.data || rt?.data)
-      );
+      /* -------- REVENUE TREND -------- */
+      setRevenueTrend(rt?.data?.trend || []);
 
+      /* -------- PROPERTY STATUS -------- */
       setPropertyStatus(
-        safeArray(ps?.data?.data || ps?.data)
+        (ps?.data?.stats || []).map((s) => ({
+          status: s._id,
+          count: s.count,
+        }))
       );
 
+      /* -------- TOP OWNERS -------- */
       setTopOwners(
-        safeArray(to?.data?.owners || to?.data?.data || to?.data)
+        (to?.data?.owners || []).map((o) => ({
+          name: o.ownerName,
+          totalBookings: o.totalBookings,
+        }))
       );
 
-      setReports(
-        safeArray(rs?.data?.reports || rs?.data?.data || rs?.data)
-      );
-
+      /* -------- REPORTS -------- */
+      setReports(rs?.data?.reports || { pending: 0, resolved: 0 });
     } catch (err) {
       console.error("ADMIN DASHBOARD LOAD ERROR:", err);
     } finally {
@@ -98,12 +105,11 @@ export default function AdminDashboard() {
   return (
     <div className="p-6 space-y-10">
 
-      {/* ===== HEADER ===== */}
       <h1 className="text-2xl font-bold text-gray-800">
         Admin Dashboard
       </h1>
 
-      {/* ===== SUMMARY CARDS ===== */}
+      {/* ================= SUMMARY CARDS ================= */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Users" value={summary.users} />
         <StatCard title="Properties" value={summary.properties} />
@@ -111,19 +117,24 @@ export default function AdminDashboard() {
         <StatCard title="Revenue" value={`₹${summary.revenue}`} />
       </div>
 
-      {/* ===== CHARTS ===== */}
+      {/* ================= TRENDS ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <ChartCard title="Bookings Trend">
           {bookingsTrend.length === 0 ? (
             <Empty />
           ) : (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={260}>
               <LineChart data={bookingsTrend}>
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Line dataKey="count" stroke="#6366f1" strokeWidth={3} />
+                <Line
+                  dataKey="count"
+                  stroke="#6366f1"
+                  strokeWidth={3}
+                  dot={{ r: 4 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -133,19 +144,24 @@ export default function AdminDashboard() {
           {revenueTrend.length === 0 ? (
             <Empty />
           ) : (
-            <ResponsiveContainer width="100%" height={250}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart data={revenueTrend}>
                 <XAxis dataKey="date" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="amount" fill="#10b981" />
+                <Bar
+                  dataKey="revenue"
+                  fill="#10b981"
+                  radius={[6, 6, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           )}
         </ChartCard>
+
       </div>
 
-      {/* ===== PIE + TABLE ===== */}
+      {/* ================= PIE + TABLE ================= */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <ChartCard title="Property Status">
@@ -171,7 +187,7 @@ export default function AdminDashboard() {
           )}
         </ChartCard>
 
-        <TableCard title="Top Owners">
+        <TableCard title="Top Owners (by bookings)">
           {topOwners.length === 0 ? (
             <Empty />
           ) : (
@@ -179,45 +195,42 @@ export default function AdminDashboard() {
               <thead className="bg-gray-100">
                 <tr>
                   <th className="p-2 text-left">Owner</th>
-                  <th className="p-2">Properties</th>
-                  <th className="p-2">Revenue</th>
+                  <th className="p-2 text-center">Bookings</th>
                 </tr>
               </thead>
               <tbody>
-                {topOwners.map(o => (
-                  <tr key={o._id} className="border-t">
-                    <td className="p-2">{o.name || o.fullName}</td>
-                    <td className="p-2 text-center">{o.totalProperties || 0}</td>
-                    <td className="p-2 text-center">₹{o.totalRevenue || 0}</td>
+                {topOwners.map((o, i) => (
+                  <tr key={i} className="border-t">
+                    <td className="p-2">{o.name}</td>
+                    <td className="p-2 text-center">
+                      {o.totalBookings}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
         </TableCard>
+
       </div>
 
-      {/* ===== REPORTS ===== */}
-      <TableCard title="Recent Reports">
-        {reports.length === 0 ? (
-          <Empty />
-        ) : (
-          <ul className="space-y-2 text-sm">
-            {reports.map(r => (
-              <li key={r._id} className="flex justify-between border-b pb-1">
-                <span>{r.type}</span>
-                <span className="capitalize text-gray-500">{r.status}</span>
-              </li>
-            ))}
-          </ul>
-        )}
+      {/* ================= REPORTS ================= */}
+      <TableCard title="Reports Summary">
+        <div className="flex justify-between text-sm">
+          <span>Pending Reports</span>
+          <span className="font-semibold">{reports.pending}</span>
+        </div>
+        <div className="flex justify-between text-sm mt-2">
+          <span>Resolved Reports</span>
+          <span className="font-semibold">{reports.resolved}</span>
+        </div>
       </TableCard>
 
     </div>
   );
 }
 
-/* ---------- UI COMPONENTS ---------- */
+/* ================= UI COMPONENTS ================= */
 
 function StatCard({ title, value }) {
   return (

@@ -5,7 +5,14 @@ import api from "./axios";
 // ----------------------
 export const adminLogin = (data) => api.post("/admin/auth/login");
 export const getAdminProfile = () => api.get("/admin/auth/me");
-export const updateAdminProfile = (data) => api.put("/admin/auth/me", data);
+export const updateAdminProfile = (data) =>
+  api.put("/admin/auth/me", data, {
+    headers:
+      data instanceof FormData
+        ? { "Content-Type": "multipart/form-data" }
+        : {},
+  });
+
 export const adminChangePassword = (data) => api.put("/admin/auth/change-password", data);
 
 // ----------------------

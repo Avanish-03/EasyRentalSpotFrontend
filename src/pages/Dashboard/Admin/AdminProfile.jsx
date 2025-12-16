@@ -5,9 +5,13 @@ import {
   adminChangePassword,
 } from "../../../api/adminApi";
 
+const DEFAULT_AVATAR =
+  "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+
 export default function AdminProfile() {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [avatarPreview, setAvatarPreview] = useState(null);
 
   const [form, setForm] = useState({
     fullName: "",
@@ -27,16 +31,43 @@ export default function AdminProfile() {
   const loadProfile = async () => {
     try {
       const res = await getAdminProfile();
-      setProfile(res.data.user);
+      const user = res.data.user;
+
+      setProfile(user);
+      setAvatarPreview(
+        user.avatar
+          ? `http://localhost:5000${user.avatar}?t=${Date.now()}`
+          : DEFAULT_AVATAR
+      );
+
       setForm({
-        fullName: res.data.user.fullName || "",
-        email: res.data.user.email || "",
-        phone: res.data.user.phone || "",
+        fullName: user.fullName || "",
+        email: user.email || "",
+        phone: user.phone || "",
       });
     } catch (err) {
       console.error("Failed to load admin profile", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* ================= AVATAR UPLOAD (FIXED) ================= */
+  const handleAvatarChange = async (file) => {
+    if (!file) return;
+
+    // ✅ instant preview (NO user reference)
+    setAvatarPreview(URL.createObjectURL(file));
+
+    try {
+      const fd = new FormData();
+      fd.append("avatar", file);
+
+      await updateAdminProfile(fd);
+      loadProfile(); // reload real avatar from backend
+    } catch (err) {
+      alert("Avatar upload failed");
+      loadProfile();
     }
   };
 
@@ -74,10 +105,34 @@ export default function AdminProfile() {
 
   return (
     <div className="p-6 max-w-4xl space-y-8">
-      <h1 className="text-2xl font-bold text-gray-800">Admin Profile</h1>
+      <h1 className="text-2xl font-bold text-gray-800">
+        Admin Profile
+      </h1>
 
-      {/* PROFILE CARD */}
+      {/* ================= PROFILE CARD ================= */}
       <div className="bg-white rounded-xl shadow p-6 space-y-4">
+
+        {/* AVATAR */}
+        <div className="flex items-center gap-4">
+          <img
+            src={avatarPreview || DEFAULT_AVATAR}
+            alt="Admin Avatar"
+            className="h-20 w-20 rounded-full object-cover border"
+          />
+
+          <label className="cursor-pointer text-sm text-blue-600 hover:underline">
+            Change Avatar
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) =>
+                handleAvatarChange(e.target.files[0])
+              }
+            />
+          </label>
+        </div>
+
         <h2 className="text-lg font-semibold text-gray-700">
           Profile Information
         </h2>
@@ -110,7 +165,7 @@ export default function AdminProfile() {
         </button>
       </div>
 
-      {/* PASSWORD CARD */}
+      {/* ================= PASSWORD CARD ================= */}
       <div className="bg-white rounded-xl shadow p-6 space-y-4">
         <h2 className="text-lg font-semibold text-gray-700">
           Change Password
@@ -143,7 +198,7 @@ export default function AdminProfile() {
   );
 }
 
-/* ---------------- UI INPUT ---------------- */
+/* ---------------- INPUT ---------------- */
 
 function Input({ label, value, onChange, type = "text" }) {
   return (
