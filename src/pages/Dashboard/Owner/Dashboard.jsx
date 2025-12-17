@@ -9,6 +9,11 @@ import Visits from "./Visits";
 import Profile from "./Profile";
 import DashboardHome from "./DashboardHome";
 
+import Notifications from "./Notifications";
+import Analytics from "./Analytics";
+import Tenants from "./Tenants";
+import Subscription from "./Subscription";
+
 const Dashboard = () => {
   // ✅ ACTIVE TAB (Persisted)
   const [activeTab, setActiveTab] = useState(() => {
@@ -51,6 +56,14 @@ const Dashboard = () => {
         {activeTab === "visits" && <Visits />}
 
         {activeTab === "reviews" && <Reviews />}
+
+        {activeTab === "notifications" && <Notifications />}
+
+        {activeTab === "analytics" && <Analytics />}
+
+        {activeTab === "tenants" && <Tenants />}
+
+        {activeTab === "subscription" && <Subscription />}
 
         {activeTab === "profile" && <Profile />}
       </div>

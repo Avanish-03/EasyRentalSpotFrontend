@@ -10,6 +10,10 @@ import {
     Settings,
     LogOut,
     Monitor,
+    MapPin,
+    Crown,
+    BarChart2,
+    Users,
 } from "lucide-react";
 
 export default function Sidebar({ role, activeTab, setActiveTab }) {
@@ -20,16 +24,24 @@ export default function Sidebar({ role, activeTab, setActiveTab }) {
             { id: "properties", label: "My Properties", icon: <Building size={18} /> },
             { id: "bookings", label: "Bookings", icon: <Calendar size={18} /> },
             { id: "payments", label: "Payments", icon: <Wallet size={18} /> },
-            { id: "visits", label: "Visits", icon: <Bookmark size={18} /> },
-            { id: "reviews", label: "Reviews", icon: <Bell size={18} /> },
+            // { id: "visits", label: "Visits", icon: <Bookmark size={18} /> },
+            // { id: "reviews", label: "Reviews", icon: <Bell size={18} /> },
+            { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
+            { id: "analytics", label: "Analytics", icon: <BarChart2 size={18} /> },
+            { id: "tenants", label: "Tenants", icon: <Users size={18} /> },
+            { id: "subscription", label: "Subscription", icon: <Crown size={18} /> },
             { id: "profile", label: "Profile", icon: <User size={18} /> },
         ],
 
         Tenant: [
             { id: "home", label: "Dashboard", icon: <Home size={18} /> },
+            { id: "properties", label: "Browse Properties", icon: <Building size={18} /> },
             { id: "bookings", label: "My Bookings", icon: <Calendar size={18} /> },
             { id: "payments", label: "My Payments", icon: <Wallet size={18} /> },
             { id: "wishlist", label: "Wishlist", icon: <Bookmark size={18} /> },
+            { id: "visits", label: "Visits", icon: <MapPin size={18} /> },
+            { id: "notifications", label: "Notifications", icon: <Bell size={18} /> },
+            { id: "subscription", label: "Subscription", icon: <Crown size={18} /> },
             { id: "profile", label: "Profile", icon: <User size={18} /> },
         ],
 

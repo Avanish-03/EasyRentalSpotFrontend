@@ -94,3 +94,20 @@ export const updateOwnerAvatar = (formData) =>
 
 export const changeOwnerPassword = (data) =>
   api.put("/profile/password", data);
+
+
+/* ----------------------------------
+   OWNER NOTIFICATIONS
+---------------------------------- */
+
+// get all notifications
+export const getOwnerNotifications = () =>
+  api.get("/notifications");
+
+// mark single notification read
+export const markNotificationRead = (id) =>
+  api.put(`/owner/notifications/${id}/read`);
+
+// mark all notifications read
+export const markAllOwnerNotificationsRead = () =>
+  api.put("/owner/notifications/read-all");

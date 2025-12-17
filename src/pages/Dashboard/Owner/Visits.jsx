@@ -1,106 +1,127 @@
 import React, { useEffect, useState } from "react";
-import { getOwnerPayments } from "../../../api/ownerApi";
+import {
+  getOwnerVisits,
+  updateVisitStatus,
+} from "../../../api/ownerApi";
 
-export default function Payments() {
-  const [payments, setPayments] = useState([]); // ✅ always array
+const Visits = () => {
+  const [visits, setVisits] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
-    loadPayments();
+    loadVisits();
   }, []);
 
-  const loadPayments = async () => {
+  const loadVisits = async () => {
     try {
       setLoading(true);
-
-      const res = await getOwnerPayments();
-
-      // ✅ MAIN FIX HERE
-      setPayments(
-        Array.isArray(res.data?.payments)
-          ? res.data.payments
-          : []
+      const res = await getOwnerVisits();
+      setVisits(
+        Array.isArray(res.data?.visits) ? res.data.visits : []
       );
-
     } catch (err) {
-      console.error("Failed to load payments", err);
-      setPayments([]); // safe fallback
+      console.error("Failed to load visits", err);
+      setVisits([]);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <p className="p-10">Loading payments...</p>;
+  const handleStatus = async (id, status) => {
+    if (!window.confirm(`Mark visit as ${status}?`)) return;
+
+    try {
+      setUpdatingId(id);
+      await updateVisitStatus(id, status);
+      loadVisits();
+    } catch {
+      alert("Failed to update visit");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="p-6">Loading visits...</div>;
+  }
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Payments</h1>
+    <div className="p-6 space-y-6">
+      <h1 className="text-2xl font-bold text-gray-800">
+        Property Visits
+      </h1>
 
-      {payments.length === 0 ? (
-        <p className="text-gray-500">No payments found.</p>
+      {visits.length === 0 ? (
+        <p className="text-gray-500">No visit requests</p>
       ) : (
-        <div className="overflow-x-auto bg-white p-4 rounded-lg shadow-md">
-          <table className="min-w-full border">
-            <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 border">Tenant</th>
-                <th className="p-3 border">Property</th>
-                <th className="p-3 border">Amount</th>
-                <th className="p-3 border">Method</th>
-                <th className="p-3 border">Status</th>
-                <th className="p-3 border">Date</th>
-              </tr>
-            </thead>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {visits.map((v) => (
+            <div
+              key={v._id}
+              className="rounded-xl bg-white p-4 shadow"
+            >
+              <h2 className="font-semibold">
+                {v.propertyId?.title || "Property"}
+              </h2>
 
-            <tbody>
-              {payments.map((p) => (
-                <tr key={p._id} className="border">
-                  <td className="p-3 border">
-                    <div className="font-medium">
-                      {p.payerId?.fullName || "Tenant"}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {p.payerId?.email}
-                    </div>
-                  </td>
+              <p className="text-sm text-gray-500 mt-1">
+                👤 {v.tenantId?.fullName || "Tenant"}
+              </p>
 
-                  <td className="p-3 border">
-                    {p.bookingId?.propertyId?.title || "Property"}
-                  </td>
+              <p className="mt-2 text-sm">
+                📅 {v.visitDate?.slice(0, 10)}
+              </p>
 
-                  <td className="p-3 border text-purple-600 font-semibold">
-                    ₹{p.amount}
-                  </td>
+              <StatusBadge status={v.status} />
 
-                  <td className="p-3 border capitalize">
-                    {p.paymentMethod}
-                  </td>
+              {v.status === "pending" && (
+                <div className="mt-3 flex gap-2">
+                  <button
+                    disabled={updatingId === v._id}
+                    onClick={() =>
+                      handleStatus(v._id, "approved")
+                    }
+                    className="flex-1 rounded bg-green-600 px-3 py-2 text-sm text-white"
+                  >
+                    Approve
+                  </button>
 
-                  <td className="p-3 border">
-                    <span
-                      className={`px-2 py-1 text-xs rounded-full
-                        ${
-                          p.status === "success"
-                            ? "bg-green-200 text-green-700"
-                            : p.status === "pending"
-                            ? "bg-yellow-200 text-yellow-700"
-                            : "bg-red-200 text-red-700"
-                        }
-                      `}
-                    >
-                      {p.status}
-                    </span>
-                  </td>
-
-                  <td className="p-3 border">
-                    {new Date(p.paymentDate).toLocaleDateString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  <button
+                    disabled={updatingId === v._id}
+                    onClick={() =>
+                      handleStatus(v._id, "cancelled")
+                    }
+                    className="flex-1 rounded bg-red-600 px-3 py-2 text-sm text-white"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
-}
+};
+
+export default Visits;
+
+const StatusBadge = ({ status }) => {
+  const map = {
+    pending: "bg-yellow-100 text-yellow-700",
+    approved: "bg-green-100 text-green-700",
+    cancelled: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span
+      className={`mt-2 inline-block rounded-full px-3 py-1 text-xs font-medium ${
+        map[status] || "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
+};

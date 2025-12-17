@@ -213,7 +213,7 @@ export default function Profile() {
       </div>
 
       {/* ================= CHANGE PASSWORD ================= */}
-      <div className="rounded-xl bg-white p-6 shadow space-y-4">
+      <div className="grid grid-cols-1 rounded-xl bg-white p-6 shadow space-y-4">
         <h3 className="text-xl font-semibold">Change Password</h3>
 
         <input

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   getOwnerBookings,
   updateOwnerBookingStatus,
@@ -9,6 +9,11 @@ const Bookings = () => {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
 
+  // 🔎 FILTER STATES
+  const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState("none");
+
   useEffect(() => {
     loadBookings();
   }, []);
@@ -18,9 +23,7 @@ const Bookings = () => {
       setLoading(true);
       const res = await getOwnerBookings();
       setBookings(
-        Array.isArray(res.data?.bookings)
-          ? res.data.bookings
-          : []
+        Array.isArray(res.data?.bookings) ? res.data.bookings : []
       );
     } catch (err) {
       console.error("Failed to load bookings", err);
@@ -42,12 +45,51 @@ const Bookings = () => {
     try {
       setUpdatingId(bookingId);
       await updateOwnerBookingStatus(bookingId, status);
-      loadBookings(); // ✅ AUTO REFRESH
+      loadBookings();
     } catch (err) {
       alert("Failed to update booking status");
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  /* ---------- FILTERED BOOKINGS ---------- */
+  const filteredBookings = useMemo(() => {
+    let list = [...bookings];
+
+    if (search) {
+      list = list.filter(
+        (b) =>
+          b.propertyId?.title
+            ?.toLowerCase()
+            .includes(search.toLowerCase()) ||
+          b.tenantId?.fullName
+            ?.toLowerCase()
+            .includes(search.toLowerCase())
+      );
+    }
+
+    if (status !== "all") {
+      list = list.filter((b) => b.status === status);
+    }
+
+    if (sort === "low") {
+      list.sort((a, b) => a.totalAmount - b.totalAmount);
+    }
+
+    if (sort === "high") {
+      list.sort((a, b) => b.totalAmount - a.totalAmount);
+    }
+
+    return list;
+  }, [bookings, search, status, sort]);
+
+  /* ---------- STATS ---------- */
+  const stats = {
+    total: bookings.length,
+    pending: bookings.filter((b) => b.status === "pending").length,
+    confirmed: bookings.filter((b) => b.status === "confirmed").length,
+    cancelled: bookings.filter((b) => b.status === "cancelled").length,
   };
 
   /* ---------- LOADING ---------- */
@@ -60,27 +102,71 @@ const Bookings = () => {
   }
 
   return (
-    <div className="p-6">
-      <h1 className="mb-6 text-2xl font-bold text-gray-800">
+    <div className="p-6 space-y-6">
+      {/* HEADER */}
+      <h1 className="text-2xl font-bold text-gray-800">
         Bookings
       </h1>
 
-      {bookings.length === 0 ? (
-        <p className="text-gray-500">No bookings found</p>
+      {/* 🔢 QUICK STATS */}
+      <div className="flex gap-4 text-sm">
+        <Stat label="Total" value={stats.total} />
+        <Stat label="Pending" value={stats.pending} color="yellow" />
+        <Stat label="Confirmed" value={stats.confirmed} color="green" />
+        <Stat label="Cancelled" value={stats.cancelled} color="red" />
+      </div>
+
+      {/* 🔎 FILTER BAR */}
+      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow">
+        <input
+          type="text"
+          placeholder="Search property or tenant..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full sm:w-64 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:ring-purple-500"
+        />
+
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="rounded-lg border px-3 py-2 text-sm"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className="rounded-lg border px-3 py-2 text-sm"
+        >
+          <option value="none">Sort by Amount</option>
+          <option value="low">Low → High</option>
+          <option value="high">High → Low</option>
+        </select>
+      </div>
+
+      {/* BOOKINGS LIST */}
+      {filteredBookings.length === 0 ? (
+        <div className="rounded-xl bg-white p-10 text-center text-gray-500 shadow">
+          No bookings found
+        </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {bookings.map((b) => (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredBookings.map((b) => (
             <div
               key={b._id}
-              className="rounded-xl border bg-white p-4 shadow-sm"
+              className="rounded-xl bg-white p-5 shadow hover:shadow-lg transition"
             >
               {/* PROPERTY */}
-              <h2 className="text-lg font-semibold text-gray-800">
+              <h2 className="text-lg font-semibold truncate">
                 {b.propertyId?.title || "Property"}
               </h2>
 
               {/* TENANT */}
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="mt-1 text-sm text-gray-500">
                 👤 {b.tenantId?.fullName || "Tenant"}
               </p>
 
@@ -91,26 +177,14 @@ const Bookings = () => {
               </p>
 
               {/* AMOUNT */}
-              <p className="mt-3 text-lg font-bold text-purple-700">
+              <p className="mt-3 text-2xl font-bold text-purple-700">
                 ₹{b.totalAmount}
               </p>
 
               {/* STATUS */}
-              <span
-                className={`inline-block mt-2 rounded-full px-3 py-1 text-xs font-medium
-                  ${
-                    b.status === "confirmed"
-                      ? "bg-green-100 text-green-700"
-                      : b.status === "pending"
-                      ? "bg-yellow-100 text-yellow-700"
-                      : "bg-red-100 text-red-700"
-                  }
-                `}
-              >
-                {b.status}
-              </span>
+              <StatusBadge status={b.status} />
 
-              {/* ACTION BUTTONS */}
+              {/* ACTIONS */}
               {b.status === "pending" && (
                 <div className="mt-4 flex gap-2">
                   <button
@@ -143,3 +217,40 @@ const Bookings = () => {
 };
 
 export default Bookings;
+
+/* ---------- SMALL UI ---------- */
+
+const Stat = ({ label, value, color = "gray" }) => {
+  const colors = {
+    gray: "bg-gray-100 text-gray-700",
+    green: "bg-green-100 text-green-700",
+    yellow: "bg-yellow-100 text-yellow-700",
+    red: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span
+      className={`rounded-full px-4 py-1 text-xs font-medium ${colors[color]}`}
+    >
+      {label}: {value}
+    </span>
+  );
+};
+
+const StatusBadge = ({ status }) => {
+  const map = {
+    confirmed: "bg-green-100 text-green-700",
+    pending: "bg-yellow-100 text-yellow-700",
+    cancelled: "bg-red-100 text-red-700",
+  };
+
+  return (
+    <span
+      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${
+        map[status] || "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
+};
