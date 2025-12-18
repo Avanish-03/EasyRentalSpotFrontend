@@ -3,6 +3,7 @@ import {
   getOwnerBookings,
   updateOwnerBookingStatus,
 } from "../../../api/ownerApi";
+import { CalendarCheck, CheckCircle, Clock, XCircle } from "lucide-react";
 
 const Bookings = () => {
   const [bookings, setBookings] = useState([]);
@@ -104,18 +105,42 @@ const Bookings = () => {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <h1 className="text-2xl font-bold text-gray-800">
-        Bookings
-      </h1>
-
-      {/* 🔢 QUICK STATS */}
-      <div className="flex gap-4 text-sm">
-        <Stat label="Total" value={stats.total} />
-        <Stat label="Pending" value={stats.pending} color="yellow" />
-        <Stat label="Confirmed" value={stats.confirmed} color="green" />
-        <Stat label="Cancelled" value={stats.cancelled} color="red" />
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white shadow">
+        <div>
+          <h1 className="text-2xl font-bold">Bookings</h1>
+          <p className="text-sm text-white/80">
+            Track and manage all property bookings
+          </p>
+        </div>
       </div>
 
+      {/* QUICK STATS */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          label="Total Bookings"
+          value={stats.total}
+          icon={<CalendarCheck />}
+          color="indigo"
+        />
+        <StatCard
+          label="Pending"
+          value={stats.pending}
+          icon={<Clock />}
+          color="yellow"
+        />
+        <StatCard
+          label="Confirmed"
+          value={stats.confirmed}
+          icon={<CheckCircle />}
+          color="green"
+        />
+        <StatCard
+          label="Cancelled"
+          value={stats.cancelled}
+          icon={<XCircle />}
+          color="red"
+        />
+      </div>
       {/* 🔎 FILTER BAR */}
       <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow">
         <input
@@ -220,22 +245,27 @@ export default Bookings;
 
 /* ---------- SMALL UI ---------- */
 
-const Stat = ({ label, value, color = "gray" }) => {
+const StatCard = ({ label, value, icon, color }) => {
   const colors = {
-    gray: "bg-gray-100 text-gray-700",
-    green: "bg-green-100 text-green-700",
-    yellow: "bg-yellow-100 text-yellow-700",
-    red: "bg-red-100 text-red-700",
+    indigo: "bg-indigo-50 text-indigo-600",
+    yellow: "bg-yellow-50 text-yellow-600",
+    green: "bg-green-50 text-green-600",
+    red: "bg-red-50 text-red-600",
   };
 
   return (
-    <span
-      className={`rounded-full px-4 py-1 text-xs font-medium ${colors[color]}`}
-    >
-      {label}: {value}
-    </span>
+    <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow hover:shadow-md transition">
+      <div className={`rounded-xl p-3 ${colors[color]}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-2xl font-bold text-gray-800">{value}</p>
+      </div>
+    </div>
   );
 };
+
 
 const StatusBadge = ({ status }) => {
   const map = {
@@ -246,9 +276,8 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-        map[status] || "bg-gray-100 text-gray-700"
-      }`}
+      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${map[status] || "bg-gray-100 text-gray-700"
+        }`}
     >
       {status}
     </span>

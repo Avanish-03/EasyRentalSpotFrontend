@@ -4,6 +4,7 @@ import AddPropertyModal from "./AddPropertyModal";
 import EditPropertyModal from "./EditPropertyModal";
 import UploadPropertyImages from "./UploadPropertyImages";
 import PropertyImagesModal from "./PropertyImagesModal";
+import { CheckCircle, Clock, Home, Plus } from "lucide-react";
 
 export default function OwnerMyProp({ activeTab }) {
   const [properties, setProperties] = useState([]);
@@ -78,22 +79,44 @@ export default function OwnerMyProp({ activeTab }) {
   return (
     <div className="p-6 space-y-6">
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">My Properties</h1>
+      {/* HEADER */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white shadow">
+        <div>
+          <h1 className="text-2xl font-bold">My Properties</h1>
+          <p className="text-sm text-white/80">
+            Manage and track your listed properties
+          </p>
+        </div>
 
         <button
           onClick={() => setShowModal(true)}
-          className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700"
+          className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-purple-600 shadow hover:bg-gray-100 transition"
         >
-          + Add Property
+          <Plus size={18} />
+          Add Property
         </button>
       </div>
 
       {/* QUICK STATS */}
-      <div className="flex gap-4 text-sm">
-        <Stat label="Total" value={stats.total} />
-        <Stat label="Approved" value={stats.approved} color="green" />
-        <Stat label="Pending" value={stats.pending} color="yellow" />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard
+          label="Total Properties"
+          value={stats.total}
+          icon={<Home />}
+          color="purple"
+        />
+        <StatCard
+          label="Approved"
+          value={stats.approved}
+          icon={<CheckCircle />}
+          color="green"
+        />
+        <StatCard
+          label="Pending"
+          value={stats.pending}
+          icon={<Clock />}
+          color="yellow"
+        />
       </div>
 
       {/* FILTER BAR */}
@@ -177,7 +200,7 @@ export default function OwnerMyProp({ activeTab }) {
                 <button
                   onClick={() => {
                     if (p.images && p.images.length > 0) {
-                      setViewProperty(p);   
+                      setViewProperty(p);
                     }
                   }}
                   className="text-purple-600 hover:underline"
@@ -282,5 +305,25 @@ const StatusBadge = ({ status }) => {
     >
       {status}
     </span>
+  );
+};
+
+const StatCard = ({ label, value, icon, color }) => {
+  const colors = {
+    purple: "bg-purple-50 text-purple-600",
+    green: "bg-green-50 text-green-600",
+    yellow: "bg-yellow-50 text-yellow-600",
+  };
+
+  return (
+    <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow hover:shadow-md transition">
+      <div className={`rounded-xl p-3 ${colors[color]}`}>
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm text-gray-500">{label}</p>
+        <p className="text-2xl font-bold text-gray-800">{value}</p>
+      </div>
+    </div>
   );
 };

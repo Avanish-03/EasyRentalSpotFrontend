@@ -41,7 +41,7 @@ export const cancelTenantSubscription = () =>
 /* ----------------------------------
    TENANT PROPERTY BROWSING
 ---------------------------------- */
-export const getTenantProperties = (params) =>
+export const getTenantProperties = (params = {}) =>
   api.get("/tenant/properties", { params });
 
 export const getTenantFilters = () =>
@@ -59,8 +59,8 @@ export const getSimilarProperties = (id) =>
 export const addToWishlist = (data) =>
   api.post("/tenant/wishlist", data);
 
-export const removeFromWishlist = (id) =>
-  api.delete(`/tenant/wishlist/${id}`);
+export const removeFromWishlist = (propertyId) =>
+  api.delete(`/tenant/wishlist/${propertyId}`);
 
 export const getTenantWishlist = () =>
   api.get("/tenant/wishlist");
@@ -111,7 +111,7 @@ export const confirmPaymentClient = (data) =>
   api.post("/tenant/payments/confirm", data);
 
 export const getMyPayments = () =>
-  api.get("/tenant/payments"); 
+  api.get("/tenant/payments");
 
 export const requestPaymentRefund = (id) =>
   api.post(`/tenant/payments/${id}/refund`);
@@ -135,7 +135,7 @@ export const cancelVisit = (id, reason) =>
    TENANT NOTIFICATIONS
 ---------------------------------- */
 export const getTenantNotifications = () =>
-  api.get("/tenant/notifications");
+  api.get("/notifications");
 
 export const markNotificationRead = (id) =>
   api.put(`/tenant/notifications/${id}/read`);

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getOwnerPayments } from "../../../api/ownerApi";
+import { LayoutGrid, Table } from "lucide-react";
 
 export default function Payments() {
   const [payments, setPayments] = useState([]);
@@ -66,34 +67,21 @@ export default function Payments() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-gray-800">Payments</h1>
 
-        {/* VIEW TOGGLE */}
-        <div className="flex rounded-lg border overflow-hidden">
-          <button
-            onClick={() => setView("cards")}
-            className={`px-4 py-2 text-sm ${
-              view === "cards"
-                ? "bg-green-600 text-white"
-                : "bg-white"
-            }`}
-          >
-            Card View
-          </button>
-          <button
-            onClick={() => setView("table")}
-            className={`px-4 py-2 text-sm ${
-              view === "table"
-                ? "bg-green-600 text-white"
-                : "bg-white"
-            }`}
-          >
-            Table View
-          </button>
+      {/* HEADER */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white shadow">
+
+        <div>
+          <h1 className="text-2xl font-bold">Payments</h1>
+          <p className="text-sm text-white/80">
+            View and manage all payment transactions
+          </p>
         </div>
+
+
+
       </div>
+
 
       {/* 💰 SUMMARY CARDS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -104,7 +92,7 @@ export default function Payments() {
       </div>
 
       {/* 🔎 FILTER BAR */}
-      <div className="flex flex-wrap gap-4 rounded-xl bg-white p-4 shadow">
+      <div className="flex flex-wrap justify-between items-center gap-4 rounded-xl bg-white p-4 shadow">
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
@@ -116,17 +104,30 @@ export default function Payments() {
           <option value="failed">Failed</option>
         </select>
 
-        <select
-          value={method}
-          onChange={(e) => setMethod(e.target.value)}
-          className="rounded-lg border px-3 py-2 text-sm"
-        >
-          <option value="all">All Methods</option>
-          <option value="upi">UPI</option>
-          <option value="card">Card</option>
-          <option value="netbanking">Net Banking</option>
-          <option value="cash">Cash</option>
-        </select>
+        {/* VIEW TOGGLE */}
+        <div className="flex overflow-hidden rounded-xl bg-white shadow">
+          <button
+            onClick={() => setView("cards")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition ${view === "cards"
+              ? "bg-green-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <LayoutGrid size={16} />
+            Cards
+          </button>
+
+          <button
+            onClick={() => setView("table")}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium transition ${view === "table"
+              ? "bg-green-600 text-white"
+              : "text-gray-600 hover:bg-gray-100"
+              }`}
+          >
+            <Table size={16} />
+            Table
+          </button>
+        </div>
       </div>
 
       {/* CONTENT */}
@@ -244,9 +245,8 @@ const StatusBadge = ({ status }) => {
 
   return (
     <span
-      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${
-        map[status] || "bg-gray-100 text-gray-700"
-      }`}
+      className={`mt-3 inline-block rounded-full px-3 py-1 text-xs font-medium ${map[status] || "bg-gray-100 text-gray-700"
+        }`}
     >
       {status}
     </span>

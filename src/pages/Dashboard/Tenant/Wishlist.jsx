@@ -3,101 +3,98 @@ import {
   getTenantWishlist,
   removeFromWishlist,
 } from "../../../api/tenantApi";
+import PropertyDetailsModal from "./PropertyDetailsModal";
+import { Heart, MapPin } from "lucide-react";
+
+const API_BASE =
+  process.env.REACT_APP_API_URL || "http://localhost:5000";
 
 const DEFAULT_IMG =
   "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=800";
 
 export default function Wishlist() {
-  const [loading, setLoading] = useState(true);
   const [wishlist, setWishlist] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     loadWishlist();
   }, []);
 
-  /* ---------------- LOAD WISHLIST ---------------- */
   const loadWishlist = async () => {
     try {
-      setLoading(true);
       const res = await getTenantWishlist();
-
-      setWishlist(
-        Array.isArray(res.data.wishlist)
-          ? res.data.wishlist
-          : []
-      );
-    } catch (err) {
-      console.error("Failed to load wishlist", err);
-      setWishlist([]);
+      setWishlist(res.data?.wishlist || []);
     } finally {
       setLoading(false);
     }
   };
 
-  /* ---------------- REMOVE ---------------- */
   const handleRemove = async (propertyId) => {
-    if (!window.confirm("Remove from wishlist?")) return;
-
-    try {
-      await removeFromWishlist(propertyId);
-      loadWishlist();
-    } catch (err) {
-      alert("Failed to remove from wishlist");
-    }
+    await removeFromWishlist({ propertyId });
+    loadWishlist();
+    setSelected(null);
   };
 
-  /* ---------------- LOADING ---------------- */
   if (loading) {
     return (
       <div className="flex h-60 items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-600 border-t-transparent"></div>
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-pink-600 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="p-6 space-y-8">
 
-      {/* ================= HEADER ================= */}
-      <h1 className="text-2xl font-bold text-gray-800">
-        My Wishlist
-      </h1>
+      {/* HEADER */}
+      <div className="rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white shadow">
+        <h1 className="text-2xl font-bold">My Wishlist</h1>
+        <p className="text-sm text-white/80">
+          Your favorite properties in one place
+        </p>
+      </div>
 
-      {/* ================= EMPTY ================= */}
+      {/* EMPTY */}
       {wishlist.length === 0 ? (
-        <div className="rounded-xl bg-white p-10 text-center shadow">
-          <p className="text-gray-500 text-lg">
-            ❤️ Your wishlist is empty
-          </p>
-          <p className="text-sm text-gray-400 mt-1">
-            Browse properties and save your favorites
+        <div className="rounded-2xl bg-white p-10 text-center shadow">
+          <Heart size={36} className="mx-auto mb-3 text-pink-400" />
+          <p className="text-gray-600 font-medium">
+            Your wishlist is empty
           </p>
         </div>
       ) : (
-        /* ================= GRID ================= */
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {wishlist.map((item) => {
-            const p = item.propertyId || item; // API safe
+          {wishlist.map((w) => {
+            const p = w.propertyId;
+
+            const imageUrl =
+              p.images && p.images.length > 0
+                ? `${API_BASE}/uploads/properties/${p.images[0]}`
+                : DEFAULT_IMG;
 
             return (
               <div
-                key={p._id}
-                className="rounded-xl border bg-white overflow-hidden shadow-sm hover:shadow-lg transition"
+                key={w._id}
+                className="rounded-2xl border bg-white overflow-hidden shadow-sm hover:shadow-lg transition"
               >
                 {/* IMAGE */}
                 <div className="relative h-44">
                   <img
-                    src={p.images?.[0] || DEFAULT_IMG}
+                    src={imageUrl}
                     alt={p.title}
                     className="h-full w-full object-cover"
                   />
 
                   <button
                     onClick={() => handleRemove(p._id)}
-                    className="absolute top-3 right-3 text-xl"
+                    className="absolute top-3 right-3 rounded-full bg-white p-2 shadow"
                     title="Remove from wishlist"
                   >
-                    ❤️
+                    <Heart
+                      size={18}
+                      className="fill-pink-500 text-pink-500"
+                    />
                   </button>
                 </div>
 
@@ -107,22 +104,18 @@ export default function Wishlist() {
                     {p.title}
                   </h3>
 
-                  <p className="text-sm text-gray-500">
-                    📍 {p.locationId?.city || "City"}
+                  <p className="flex items-center gap-1 text-sm text-gray-500">
+                    <MapPin size={14} />
+                    {p.city || "Surat"}
                   </p>
 
-                  <p className="text-lg font-bold text-pink-600">
+                  <p className="text-lg font-bold text-indigo-700">
                     ₹{p.price}
                   </p>
 
-                  <div className="flex gap-4 text-sm text-gray-600">
-                    <span>🛏 {p.bedrooms}</span>
-                    <span>🛁 {p.bathrooms}</span>
-                    <span>📐 {p.area} sqft</span>
-                  </div>
-
                   <button
-                    className="mt-3 w-full rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
+                    onClick={() => setSelected(p)}
+                    className="mt-3 w-full rounded-xl bg-indigo-600 px-4 py-2 text-sm text-white hover:bg-indigo-700"
                   >
                     View Details
                   </button>
@@ -131,6 +124,15 @@ export default function Wishlist() {
             );
           })}
         </div>
+      )}
+
+      {/* MODAL */}
+      {selected && (
+        <PropertyDetailsModal
+          property={selected}
+          onClose={() => setSelected(null)}
+          onRemoveWishlist={handleRemove}
+        />
       )}
     </div>
   );

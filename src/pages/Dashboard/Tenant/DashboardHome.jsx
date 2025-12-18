@@ -93,9 +93,13 @@ export default function TenantDashboard() {
     <div className="p-6 space-y-10">
 
       {/* HEADER */}
-      <h1 className="text-2xl font-bold text-gray-800">
-        Tenant Dashboard
-      </h1>
+      <div className="rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 p-6 text-white shadow">
+        <h1 className="text-2xl font-bold">Tenant Dashboard</h1>
+        <p className="mt-1 text-sm text-white/80">
+          Manage your bookings, payments, and activities
+        </p>
+      </div>
+
 
       {/* STATS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
